@@ -4,26 +4,23 @@ import os
 # https://stackoverflow.com/questions/952914/making-a-flat-list-out-of-list-of-lists-in-python
 myFlatten = lambda l: list(itertools.chain(*l))
 
-def initWeights(features):
-	return [1] * len(features[0])
+def initWeights(features, classes):
+	return {uniqClass: [1] * len(features[0]) for uniqClass in set(classes)}
 
-def perceptron(features, weights):
-	return [sum([weights[i] * f for i, f in enumerate(featureVec)]) for featureVec in features]
+def perceptron(featureVec, allWeights):
+	return {cInd: sum([f * w for f, w in zip(featureVec, allWeights[cInd])]) for cInd in allWeights}
 
-def perceptronAlg(allFeatures, allWeightsFace, allWeightsNonFace, trainClasses):
-	pFace = perceptron(allFeatures, allWeightsFace)
-	pNonFace = perceptron(allFeatures, allWeightsNonFace)
+def perceptronAlg(allFeatures, allWeights, trainClasses):
+	classScores = [perceptron(featureVec, allWeights) for featureVec in allFeatures]
 
-	guessClasses = [1 if face >= nonFace else 0 for (face, nonFace) in zip(pFace, pNonFace)]
+	guessClasses = [max(scores, key = scores.get) for scores in classScores]
 	return [actual == guess for (actual, guess) in zip(trainClasses, guessClasses)]
 
-def getImageNames(category, numImages):
-	if category == "train":
-		imageDir = "facedata_train_split"
-	elif category == "test":
-		imageDir = "facedata_test_split"
+def getImageNames(imageType, category, numImages):
+	# example: facedata_train_split
+	imageDir = imageType + "data_" + category + "_split"
 
-	return [os.path.join(imageDir, "face" + str(i) + ".txt") for i in range(0, numImages)]
+	return [os.path.join(imageDir, imageType + str(i) + ".txt") for i in range(0, numImages)]
 
 def getFeatures(imageFileName):
 	with open(imageFileName, 'r') as imageFile:
@@ -31,15 +28,21 @@ def getFeatures(imageFileName):
 
 	return pixelData
 
-def getAllFeatures(category, numImages):
-	imageNames = getImageNames(category, numImages)
+def getAllFeatures(imageType, category, numImages):
+	imageNames = getImageNames(imageType, category, numImages)
 	return [getFeatures(fileName) for fileName in imageNames]
 
-def getClasses(category):
+def getClasses(imageType, category):
 	if category == "train":
-		labelFileName = "facedatatrainlabels" # os.path.join("imageDir", )
+		if imageType == "face":
+			labelFileName = "facedatatrainlabels"
+		elif imageType == "digit":
+			labelFileName = "traininglabels"
 	elif category == "test":
-		labelFileName = "facedatatestlabels"
+		if imageType == "face":
+			labelFileName = "facedatatestlabels"
+		elif imageType == "digit":
+			labelFileName = "testlabels"
 
 	with open(labelFileName, 'r') as labelFile:
 		classData = [int(l) for l in labelFile.readlines()]
@@ -47,34 +50,33 @@ def getClasses(category):
 	return classData
 
 if __name__ == "__main__":
-	imageType = "face"
+	imageType = "digit"
 
 	# training setup
-	trainClasses = getClasses("train")
-	multFactors = [2*i - 1 for i in trainClasses]
-
-	trainFeatures = getAllFeatures("train", len(trainClasses))
-
-	allWeightsFace = initWeights(trainFeatures)
-	allWeightsNonFace = initWeights(trainFeatures)
+	trainClasses = getClasses(imageType, "train")
+	trainFeatures = getAllFeatures(imageType, "train", len(trainClasses))
+	allWeights = initWeights(trainFeatures, trainClasses)
 
 	# training iteration
 	for i in range(0, 20):
 		# print(allWeightsFace[100:110]) # faces debug
-		print(allWeightsFace[100:110]) # digit debug
+		print(allWeights[1][100:110]) # digit debug
 
-		correctClasses = perceptronAlg(trainFeatures, allWeightsFace, allWeightsNonFace, trainClasses)
+		correctClasses = perceptronAlg(trainFeatures, allWeights, trainClasses)
 		print(sum(correctClasses) / len(correctClasses))
 
 		for ind, guess in enumerate(correctClasses):
 			if not guess:
-				allWeightsFace = [w + multFactors[ind] * trainFeatures[ind][j] for j, w in enumerate(allWeightsFace)]
-				allWeightsNonFace = [w - multFactors[ind] * trainFeatures[ind][j] for j, w in enumerate(allWeightsNonFace)]
+				for cInd in allWeights:
+					if cInd == trainClasses[ind]:
+						allWeights[cInd] = [w + trainFeatures[ind][j] for j, w in enumerate(allWeights[cInd])]
+					else:
+						allWeights[cInd] = [w - trainFeatures[ind][j] for j, w in enumerate(allWeights[cInd])]
 
 	print('------------------------')
 	# testing phase
-	testClasses = getClasses("test")
-	testFeatures = getAllFeatures("test", len(testClasses))
+	testClasses = getClasses(imageType, "test")
+	testFeatures = getAllFeatures(imageType, "test", len(testClasses))
 
-	correctClasses = perceptronAlg(testFeatures, allWeightsFace, allWeightsNonFace, testClasses)
+	correctClasses = perceptronAlg(testFeatures, allWeights, testClasses)
 	print(sum(correctClasses) / len(correctClasses))
