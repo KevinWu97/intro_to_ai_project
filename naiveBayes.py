@@ -6,10 +6,9 @@ class naiveBayes(object):
 		self.featureProb = []
 		self.smoothing = 1
 
-	def train(self, numClass, sampleSet):
-		print(len(sampleSet))
+	def train(self, numClass, sampleSet, sampleClass):
 		#get count of features
-		featureCount = len(sampleSet[0]) - 1
+		featureCount = len(sampleSet[0])
 
 		#create matrix featureProb[classification][feature number], initialized to smoothing for all values
 		self.featureProb = []
@@ -27,10 +26,10 @@ class naiveBayes(object):
 		#for each element in the set get classification, then add +1 to each feature present (for binary)
 		#additionally, increment frequency of classifications
 		for i in range(len(sampleSet)):
-			currClassification = sampleSet[i][0]
+			currClassification = sampleClass[i]
 			self.classProb[currClassification] += 1
 			for j in range(featureCount):
-				self.featureProb[currClassification][j] += sampleSet[i][j + 1]
+				self.featureProb[currClassification][j] += sampleSet[i][j]
 
 		#normalize for self.featureProb
 		for i in range(featureCount):
@@ -40,7 +39,6 @@ class naiveBayes(object):
 			for j in range(numClass):
 				self.featureProb[j][i] /= total
 
-		print(self.classProb)
 		#normalize for self.classProb
 		total = 0
 		for i in range(numClass):
@@ -48,11 +46,15 @@ class naiveBayes(object):
 		for i in range(numClass):
 			self.classProb[i] /= total
 
-		print(self.classProb)
+	def setSmooth(self, smooth):
+		self.smoothing = smooth
 
 	#checks list of images reduced to features, returns labels
 	def test(self, testCases):
 		testResults = []
+		frequency = []
+		for i in range(len(self.classProb)):
+			frequency.append(0)
 		for test in testCases:
 			if len(self.classProb) == 0:
 				print("Classifier not initialized, please initialize first.\n")
@@ -74,13 +76,15 @@ class naiveBayes(object):
 					temp = math.log(self.classProb[i])
 					for j in range(len(self.featureProb[0])):
 						if test[j] == 1:
-							maxVal += math.log(self.featureProb[i][j])
+							temp += math.log(self.featureProb[i][j])
 						else:
-							maxVal += math.log(1 - self.featureProb[i][j])
+							temp += math.log(1 - self.featureProb[i][j])
 					if temp > maxVal:
 						maxClass = i
 						maxVal = temp
 				testResults.append(maxClass)
+				frequency[maxClass] += 1
+		print(frequency)
 		return testResults
 
 
