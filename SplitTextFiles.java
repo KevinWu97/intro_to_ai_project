@@ -25,14 +25,17 @@ public class SplitTextFiles {
 			String type = args[1];
 
 			String fileName = "";
+			int height = 0;
 			if (prefix.equalsIgnoreCase("face")) {
 				fileName = "facedata" + type;
+				height = FACE_HEIGHT;
 			} else {
 				if (type.equalsIgnoreCase("train")) {
 					fileName = "trainingimages";
 				} else {
 					fileName = "testimages";
 				}
+				height = DIGIT_HEIGHT;
 			}
 
 			String fileLoc = prefix + "data_" + type + "_split\\";			
@@ -64,7 +67,9 @@ public class SplitTextFiles {
 				FileWriter fw = new FileWriter(file, true);
 				BufferedWriter bw = new BufferedWriter(fw);
 
-				while(readLineIndex < DIGIT_HEIGHT && (content = br.readLine()) != null) {	
+
+
+				while(readLineIndex < height && (content = br.readLine()) != null) {	
 					bw.write(content + "\n");
 					readLineIndex++;
 				}
