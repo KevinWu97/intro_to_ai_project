@@ -16,7 +16,7 @@ class naiveBayes(object):
 				temp.append(smoothing)
 			self.featureProb.append(temp)
 
-		#create matrix self.classProb[classification], initialized to smoothing for all values
+		#create matrix self.classProb[classification], initialized to 0 for all values (no smoothing)
 		self.classProb = []
 		for i in range(numClass):
 			self.classProb.append(0)
@@ -44,28 +44,38 @@ class naiveBayes(object):
 		for i in range(numClass):
 			self.classProb[i] /= total
 
-	def assess(test):
-		if len(self.classProb) == 0:
-			print("Classifier not initialized, please initialize first.\n")
-		else:
-			#preset the max value and the index of its classification to 0
-			maxClass = 0
-			maxVal = 0
-			
-			#initialize max value
-			maxVal = math.log(self.classProb[0])
-			for i in range(len(featureProb[0])):
-				maxVal += math.log(self.featureProb[0][i])
+	#checks list of images reduced to features, returns category
+	def assess(testCases):
+		testResults = []
+		for test in testCases:
+			if len(self.classProb) == 0:
+				print("Classifier not initialized, please initialize first.\n")
+			else:
+				#preset the max value and the index of its classification to 0
+				maxClass = 0
+				maxVal = 0
+				
+				#initialize max value
+				maxVal = math.log(self.classProb[0])
+				for i in range(len(featureProb[0])):
+					if test[i] == 1:
+						maxVal += math.log(self.featureProb[0][i])
+					else:
+						maxVal += math.log(1 - self.featureProb[0][i])
 
-			#iterate through possible classifications, selecting for max value
-			for i in range(1, len(self.classProb)):
-				temp = math.log(self.classProb[i])
-				for j in range(len(featureProb[0])):
-					maxVal += math.log(self.featureProb[i][j])
-				if temp > maxVal:
-					maxClass = i
-					maxVal = temp
-		return maxVal
+				#iterate through possible classifications, selecting for max value
+				for i in range(1, len(self.classProb)):
+					temp = math.log(self.classProb[i])
+					for j in range(len(featureProb[0])):
+						if test[j] == 1:
+							maxVal += math.log(self.featureProb[i][j])
+						else:
+							maxVal += math.log(1 - self.featureProb[i][j])
+					if temp > maxVal:
+						maxClass = i
+						maxVal = temp
+				testResults.append(maxClass)
+		return testResults
 
 
 
