@@ -1,19 +1,22 @@
+import math
+
 class naiveBayes(object):
 	def __init__(self):
 		self.classProb = []
 		self.featureProb = []
 		self.smoothing = 1
 
-	def train(numClass, sampleSet):
+	def train(self, numClass, sampleSet):
+		print(len(sampleSet))
 		#get count of features
-		featureCount = len(sampleSet[0] - 1)
+		featureCount = len(sampleSet[0]) - 1
 
 		#create matrix featureProb[classification][feature number], initialized to smoothing for all values
 		self.featureProb = []
 		for i in range(numClass):
 			temp = []
 			for i in range(featureCount):
-				temp.append(smoothing)
+				temp.append(self.smoothing)
 			self.featureProb.append(temp)
 
 		#create matrix self.classProb[classification], initialized to 0 for all values (no smoothing)
@@ -27,16 +30,17 @@ class naiveBayes(object):
 			currClassification = sampleSet[i][0]
 			self.classProb[currClassification] += 1
 			for j in range(featureCount):
-				self.featureProb[currClassification][j] += sampleSet[i][j+1]
+				self.featureProb[currClassification][j] += sampleSet[i][j + 1]
 
 		#normalize for self.featureProb
 		for i in range(featureCount):
 			total = 0
 			for j in range(numClass):
-				total += self.featureProb[i][j]
+				total += self.featureProb[j][i]
 			for j in range(numClass):
-				self.featureProb[i][j] /= total
+				self.featureProb[j][i] /= total
 
+		print(self.classProb)
 		#normalize for self.classProb
 		total = 0
 		for i in range(numClass):
@@ -44,8 +48,10 @@ class naiveBayes(object):
 		for i in range(numClass):
 			self.classProb[i] /= total
 
-	#checks list of images reduced to features, returns category
-	def assess(testCases):
+		print(self.classProb)
+
+	#checks list of images reduced to features, returns labels
+	def test(self, testCases):
 		testResults = []
 		for test in testCases:
 			if len(self.classProb) == 0:
@@ -57,7 +63,7 @@ class naiveBayes(object):
 				
 				#initialize max value
 				maxVal = math.log(self.classProb[0])
-				for i in range(len(featureProb[0])):
+				for i in range(len(self.featureProb[0])):
 					if test[i] == 1:
 						maxVal += math.log(self.featureProb[0][i])
 					else:
@@ -66,7 +72,7 @@ class naiveBayes(object):
 				#iterate through possible classifications, selecting for max value
 				for i in range(1, len(self.classProb)):
 					temp = math.log(self.classProb[i])
-					for j in range(len(featureProb[0])):
+					for j in range(len(self.featureProb[0])):
 						if test[j] == 1:
 							maxVal += math.log(self.featureProb[i][j])
 						else:

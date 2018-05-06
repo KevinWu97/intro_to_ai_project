@@ -1,7 +1,7 @@
 import os
 
 #modified from Berkeley's provided code, retrieves all labels from a file
-def getLabels(baseFilePath, percent):
+def getLabels(baseFilePath):
 	labelPath = os.path.join(baseFilePath, "labels")
 	labelsFull = []
 	if(os.path.exists(labelPath)): 
@@ -13,6 +13,24 @@ def getLabels(baseFilePath, percent):
 			labelsFull.append(int(line))
 
 	return labelsFull
+
+#retrieves all data from images, converted to features
+def getAllFeatures(baseFilePath, prefix, imageCount):
+	#read image files and generate features, append to matrix
+	featureMatrix = []
+	for i in range(imageCount):
+		imagePath = prefix + str(i) + ".txt"
+		featurePath = os.path.join(baseFilePath, imagePath)
+		featureList = []
+		with open(featurePath, "r") as f:
+			for line in f:
+				for c in line:
+					if c == ' ':
+						featureList.append(0)
+					else:
+						featureList.append(1)
+		featureMatrix.append(featureList)
+	return featureMatrix
 
 #retrieves data from images with indices taken from imageList, converted to features
 def getFeatures(baseFilePath, prefix, imageList):
