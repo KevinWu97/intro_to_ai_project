@@ -7,12 +7,6 @@ myFlatten = lambda l: list(itertools.chain(*l))
 def initWeights(features):
 	return [1] * len(features[0])
 
-def getFeatures(imageFileName):
-	with open(imageFileName, 'r') as imageFile:
-		pixelData = myFlatten([[0 if c == ' ' else 1 for c in lineStr[:-1]] for lineStr in imageFile])
-
-	return pixelData
-
 def perceptron(features, weights):
 	return [sum([weights[i] * f for i, f in enumerate(featureVec)]) for featureVec in features]
 
@@ -30,6 +24,12 @@ def getImageNames(category, numImages):
 		imageDir = "facedata_test_split"
 
 	return [os.path.join(imageDir, "face" + str(i) + ".txt") for i in range(0, numImages)]
+
+def getFeatures(imageFileName):
+	with open(imageFileName, 'r') as imageFile:
+		pixelData = myFlatten([[0 if c == ' ' else 1 for c in lineStr[:-1]] for lineStr in imageFile])
+
+	return pixelData
 
 def getAllFeatures(category, numImages):
 	imageNames = getImageNames(category, numImages)
